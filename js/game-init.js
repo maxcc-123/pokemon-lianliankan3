@@ -244,3 +244,205 @@ document.addEventListener('DOMContentLoaded', function() {
         return array;
     }
 });
+
+// 游戏初始化
+document.addEventListener('DOMContentLoaded', () => {
+    // 创建游戏核心实例
+    const gameCore = new GameCore();
+    
+    // 创建游戏UI实例
+    const gameUI = new GameUI(gameCore);
+    
+    // 创建游戏事件处理实例
+    const gameEvents = new GameEvents(gameCore, gameUI);
+    
+    // 初始化UI
+    gameUI.init();
+    
+    // 初始化事件
+    gameEvents.init();
+    
+    // 更新UI初始状态
+    gameUI.updateUI();
+    
+    // 添加成就系统
+    initAchievements(gameCore);
+});
+
+// 初始化成就系统
+function initAchievements(gameCore) {
+    // 成就列表
+    const achievements = {
+        firstGame: {
+            id: 'first-game',
+            title: '初次尝试',
+            description: '完成第一局游戏',
+            unlocked: false
+        },
+        comboMaster: {
+            id: 'combo-master',
+            title: '连击大师',
+            description: '连续匹配5对宠物',
+            unlocked: false
+        },
+        speedRun: {
+            id: 'speed-run',
+            title: '闪电速度',
+            description: '30秒内完成一局',
+            unlocked: false
+        }
+    };
+    
+    // 从本地存储加载成就
+    loadAchievements();
+    
+    // 更新成就显示
+    updateAchievementsUI();
+    
+    // 监听游戏事件以解锁成就
+    document.addEventListener('game-end', (e) => {
+        const gameResult = e.detail;
+        
+        // 初次尝试成就
+        if (!achievements.firstGame.unlocked) {
+            achievements.firstGame.unlocked = true;
+            showAchievementNotification(achievements.firstGame);
+        }
+        
+        // 闪电速度成就
+        if (!achievements.speedRun.unlocked && gameResult.timeUsed <= 30) {
+            achievements.speedRun.unlocked = true;
+            showAchievementNotification(achievements.speedRun);
+        }
+        
+        // 保存成就
+        saveAchievements();
+        
+        // 更新成就显示
+        updateAchievementsUI();
+    });
+    
+    document.addEventListener('combo-achieved', (e) => {
+        const comboCount = e.detail.count;
+        
+        // 连击大师成就
+        if (!achievements.comboMaster.unlocked && comboCount >= 5) {
+            achievements.comboMaster.unlocked = true;
+            showAchievementNotification(achievements.comboMaster);
+            
+            // 保存成就
+            saveAchievements();
+            
+            // 更新成就显示
+            updateAchievementsUI();
+        }
+    });
+    
+    // 从本地存储加载成就
+    function loadAchievements() {
+        const savedAchievements = localStorage.getItem('pokemon-achievements');
+        if (savedAchievements) {
+            const parsed = JSON.parse(savedAchievements);
+            for (const key in parsed) {
+                if (achievements[key]) {
+                    achievements[key].unlocked = parsed[key].unlocked;
+                }
+            }
+        }
+    }
+    
+    // 保存成就到本地存储
+    function saveAchievements() {
+        localStorage.setItem('pokemon-achievements', JSON.stringify(achievements));
+    }
+    
+    // 更新成就UI
+    function updateAchievementsUI() {
+        const achievementsList = document.querySelector('.achievements ul');
+        if (!achievementsList) return;
+        
+        achievementsList.innerHTML = '';
+        
+        for (const key in achievements) {
+            const achievement = achievements[key];
+            const li = document.createElement('li');
+            li.textContent = `${achievement.title} - ${achievement.description}`;
+            
+            if (achievement.unlocked) {
+                li.classList.add('unlocked');
+                li.innerHTML = `✅ ${li.innerHTML}`;
+            }
+            
+            achievementsList.appendChild(li);
+        }
+    }
+    
+    // 显示成就解锁通知
+    function showAchievementNotification(achievement) {
+        const notification = document.createElement('div');
+        notification.className = 'achievement-notification';
+        notification.innerHTML = `
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-content">
+                <h3>成就解锁！</h3>
+                <p>${achievement.title} - ${achievement.description}</p>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // 添加CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            .achievement-notification {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: #4e73df;
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slide-in 0.5s ease-out, fade-out 0.5s ease-in 4.5s forwards;
+            }
+            
+            .achievement-icon {
+                font-size: 30px;
+                margin-right: 15px;
+            }
+            
+            .achievement-content h3 {
+                margin: 0 0 5px 0;
+            }
+            
+            .achievement-content p {
+                margin: 0;
+            }
+            
+            @keyframes slide-in {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes fade-out {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            
+            .achievements .unlocked {
+                color: #4e73df;
+                font-weight: bold;
+            }
+        `;
+        
+        document.head.appendChild(style);
+        
+        // 5秒后移除通知
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+}

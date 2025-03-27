@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宠物小精灵大作战</title>
+    <title>宠物小精灵连连看</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/pokemon-elements.css">
 </head>
 <body>
     <div class="game-container">
         <div class="game-header">
-            <h1>宠物小精灵大作战</h1>
+            <h1>宠物小精灵连连看</h1>
             <div class="game-info">
                 <div>时间: <span id="timer">240</span>秒</div>
                 <div>分数: <span id="score">0</span></div>
@@ -56,6 +56,10 @@
     </div>
     
     <!-- 游戏脚本 -->
-    <script src="js/game.js"></script>
+    <script src="js/game-core.js"></script>
+    <script src="js/game-path.js"></script>
+    <script src="js/game-ui.js"></script>
+    <script src="js/game-events.js"></script>
+    <script src="js/game-init.js"></script>
 </body>
 </html>
